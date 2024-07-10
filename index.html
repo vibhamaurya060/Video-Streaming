@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Upload and Stream</title>
+  <style>
+    body{
+      background-color: rgb(213, 255, 247);
+      font-family: "Arial";
+    }
+    .video{
+      width: 50%;
+      margin-left: 30%;
+      margin-top: 80px;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="video">
+  <h1>Video Upload and Stream</h1>
+
+  <input type="file" id="videoFile" />
+  <button onclick="uploadVideo()">Upload Video</button>
+   
+  <div>
+    <label for="videoQuality">Select video Quality:</label>
+    <select id="videoQuality" onchange="changeVideoQuality()">
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+      <option value="high">High</option>
+    </select>
+  </div>
+  <br>
+  <video id="videoPlayer" width="600" controls></video>
+</div>
+
+  <script>
+    const videoQuality='medium';
+
+    function uploadVideo() {
+      const fileInput = document.getElementById('videoFile');
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('quality', videoQuality);
+
+      fetch('http://localhost:8080/uploads', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        const videoPath = data.filePath.replace(/\\/g, '/'); 
+        const videoFileName = encodeURIComponent(videoPath.split('/').pop());
+        loadVideo(videoFileName);
+        
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function loadVideo(filename){
+      const videoUrl = `http://localhost:8080/stream/${filename}?quality=${videoQuality}`;
+        document.getElementById('videoPlayer').src = videoUrl;
+        console.log(`Video streaming URL: ${videoUrl}`);
+    }
+
+    function changeVideoQuality(){
+      videoQuality=document.getElementById('videoQuality').value;
+      const videoSrc=document.getElementById('videoPlayer').src;
+      const filename=videoSrc.split('/').pop().split('?')[0];
+      loadVideo(filename);
+    }
+
+  </script>
+</body>
+</html>
